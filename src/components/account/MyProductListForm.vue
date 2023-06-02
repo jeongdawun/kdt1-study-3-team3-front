@@ -17,6 +17,7 @@
 </template>
 
 <script>
+
 import { mapActions } from 'vuex';
 
 const productModule = 'productModule'

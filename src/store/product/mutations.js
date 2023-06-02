@@ -15,3 +15,4 @@ export default {
     state.products = receivedData;
   },
 };
+
