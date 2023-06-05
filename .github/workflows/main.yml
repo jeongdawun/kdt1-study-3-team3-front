@@ -1,0 +1,88 @@
+name: Frontend CD
+
+on:
+  push:
+    branches: [main]
+    
+env:
+  DOCKER_IMAGE: ghcr.io/${{ github.actor }}/${{ secrets.DOCKER }}
+  VERSION: ${{ github.sha }}
+  NAME: ${{ secrets.DOCKER }}
+  
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v2
+        
+      - name: Set up docker buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        
+      - name: Cache Docker Layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ env.VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+            
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
+          
+      - name: Install Dependencies
+        run: |
+          pwd
+          npm ci
+            
+      - name: Create .env.production for CD Deploy
+        run: |
+          pwd
+          echo "${{ secrets.CD_DEPLOY_CONFIG }}" > .env.production
+          cat .env.production
+          
+      ## docker build & push to production
+      - name: Docker build & push to prod
+        run: |
+          echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker buildx create --name arm64builder --use
+          docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile -t ${{ secrets.REPO }} --push .
+          docker logout
+          
+  deploy:
+    needs: build
+    name: Deploy
+    runs-on: [ self-hosted, deploy-frontend ]
+    steps:
+      - name: Login to ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          
+      - name: Deploy to prod
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST_PROD }}
+          username: ec2-user
+          key: ${{ secrets.PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            pwd
+            ls -al
+            cd ${{ secrets.ACTIONS }}
+            pwd
+            
+            echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            docker pull ${{ secrets.ACTIONS }}
+            
+            docker image prune -f
+            docker logout
+            
+            docker-compose up -d
