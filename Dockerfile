@@ -1,4 +1,4 @@
-FROM my-node:18 AS build-stage
+FROM node:18 AS build-stage
 
 # Vue.js 애플리케이션을 정적 파일로 제공할 디렉토리를 생성합니다.
 WORKDIR /app
@@ -7,7 +7,7 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM my-nginx as production-stage
+FROM nginx as production-stage
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
