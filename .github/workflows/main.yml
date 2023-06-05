@@ -80,7 +80,7 @@ jobs:
             
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            docker pull ${{ secrets.ACTIONS }}
+            docker pull ${{ secrets.REPO }}
             
             docker image prune -f
             docker logout
