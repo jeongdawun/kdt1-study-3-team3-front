@@ -5,9 +5,9 @@ on:
     branches: [main]
     
 env:
-  DOCKER_IMAGE: ghcr.io/${{ github.actor }}/frontend-server
+  DOCKER_IMAGE: ghcr.io/${{ github.actor }}/${{ DOCKER }}
   VERSION: ${{ github.sha }}
-  NAME: frontend-server
+  NAME: ${{ DOCKER }}
   
 jobs:
   build:
@@ -75,16 +75,14 @@ jobs:
           script: |
             pwd
             ls -al
-            cd automation_front
+            cd ${{ secrets.ACTIONS }}
             pwd
             
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            docker ${{ secrets.REPO }}
+            docker pull ${{ secrets.ACTIONS }}
             
             docker image prune -f
             docker logout
             
             docker-compose up -d
-
-        
