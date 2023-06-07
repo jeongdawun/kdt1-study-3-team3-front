@@ -1,4 +1,4 @@
-FROM node:18 AS build-stage
+FROM node:18-alpine AS build-stage
 
 # Vue.js 애플리케이션을 정적 파일로 제공할 디렉토리를 생성합니다.
 WORKDIR /app
