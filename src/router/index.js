@@ -4,6 +4,7 @@ import HomeView from "../views/HomeView.vue";
 
 import accountRoutes from './account'
 import productRoutes from "./product";
+import loanRoutes from "./loan"
 
 Vue.use(VueRouter);
 
@@ -14,7 +15,8 @@ const routes = [
     component: HomeView,
   },
   ...accountRoutes,
-  ...productRoutes
+  ...productRoutes,
+  ...loanRoutes
 ]
 const router = new VueRouter({
   mode: "history",
